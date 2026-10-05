@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "uniform_ce": 2.1972246170043945,
+  "expected_ce": 2.1972245773362196,
+  "tiny_batch_first_loss": 2.15913724899292,
+  "tiny_batch_last_loss": 0.00024584270431660116,
+  "checks": [
+    "output_shape",
+    "focal_gamma_zero",
+    "probabilities",
+    "optimizer_groups",
+    "frozen_batchnorm",
+    "mixup",
+    "cutmix_non_self_area",
+    "bn_fusion",
+    "tiny_batch_fit"
+  ]
+}

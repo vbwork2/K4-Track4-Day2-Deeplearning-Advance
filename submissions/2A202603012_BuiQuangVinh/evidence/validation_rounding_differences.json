@@ -1,0 +1,116 @@
+[
+  {
+    "exp_id": "B01",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 1.5962566993904526e-08
+  },
+  {
+    "exp_id": "B02",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 2.8113600652329707e-08
+  },
+  {
+    "exp_id": "B03",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 1.237093753131413e-08
+  },
+  {
+    "exp_id": "B04",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 4.8694586030073594e-08
+  },
+  {
+    "exp_id": "B05",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 9.803818944165155e-09
+  },
+  {
+    "exp_id": "F01",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 1.5640811285022593e-08
+  },
+  {
+    "exp_id": "F01",
+    "seed": 1,
+    "metric": "ece",
+    "absolute_difference": 4.53363093455561e-08
+  },
+  {
+    "exp_id": "T00",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 1.237093753131413e-08
+  },
+  {
+    "exp_id": "T00",
+    "seed": 1,
+    "metric": "ece",
+    "absolute_difference": 3.870415523493653e-08
+  },
+  {
+    "exp_id": "T00",
+    "seed": 2,
+    "metric": "ece",
+    "absolute_difference": 8.816576966760858e-09
+  },
+  {
+    "exp_id": "T01",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 3.9391053113790875e-08
+  },
+  {
+    "exp_id": "T02",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 2.0407100564945324e-08
+  },
+  {
+    "exp_id": "T03",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 4.1328211538779747e-08
+  },
+  {
+    "exp_id": "T04",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 4.779986071366815e-08
+  },
+  {
+    "exp_id": "T05",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 2.5946324019865408e-08
+  },
+  {
+    "exp_id": "T06",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 3.352272230638942e-08
+  },
+  {
+    "exp_id": "T07",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 1.0131567791324403e-08
+  },
+  {
+    "exp_id": "T08",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 1.3468882990690101e-08
+  },
+  {
+    "exp_id": "T_COMBO",
+    "seed": 0,
+    "metric": "ece",
+    "absolute_difference": 7.537597698781262e-09
+  }
+]

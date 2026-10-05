@@ -1,6 +1,8 @@
 # DeepWeeds Lab Day 2 - 2A202603012 Bui Quang Vinh
 
-**CODE READY; EXPERIMENTS PENDING.** Kết quả GPU chỉ có sau khi bạn chạy Colab.
+**Đã chạy 19 lượt huấn luyện / 190 epoch:** 5 backbone, 10 recipe seed 0, 9 cấu hình inference. Baseline đủ 3 seed; final có seed 0 và 1, còn thiếu seed 2 và benchmark final batch 1/32.
+
+Kết quả ngày 05/10/2026: macro-F1 test baseline **97,12 ± 0,20%** (3 seed), final tạm thời **98,00 ± 0,01%** (2 seed). Chi tiết trong [report.md](report.md) và [results.xlsx](results.xlsx). Đây là báo cáo tiến độ, chưa phải bài đã hoàn tất mọi yêu cầu.
 
 ## Chạy Colab
 
@@ -65,4 +67,21 @@ Chạy public tests từ gốc repository:
 python -X utf8 -m unittest discover -s tests -v
 ```
 
-Các test dùng dữ liệu nhỏ và thư mục tạm. Kết quả test code không được dùng làm metric cho bài lab. `results.xlsx` và `report.md` giữ PENDING cho tới khi có artifact thí nghiệm thật.
+Các test dùng dữ liệu nhỏ và thư mục tạm. Kết quả test code không được dùng làm metric cho bài lab. Bảng kết quả và report hiện lấy từ artifact Colab thật; phần chưa chạy được ghi rõ, không thay bằng 0.
+
+## Bằng chứng đã đưa vào bài nộp
+
+- `evidence/<exp_id>/seed<k>/`: config, history, summary của 19 lượt hoàn thành.
+- `evidence/evaluation/`: chỉ số tính lại bằng `eval.py` nguyên bản, F1 từng lớp và ma trận nhầm lẫn.
+- `evidence/labels/`: CSV fold 0 tham chiếu, giữ nguyên byte và kiểm tra SHA-256.
+- `predictions/`: 19 CSV validation và 5 CSV test đã có.
+- `curves/`: biểu đồ training, EDA và ảnh lỗi lấy từ dataset gốc.
+- `evidence/artifact_sources.json`: ID Drive, đường dẫn và SHA-256 để truy ngược artifact.
+
+Trong thư mục bài nộp, có thể tính lại kết quả mà không cần GPU:
+
+```bash
+python -X utf8 code/eval.py score --pred "predictions/F01_seed*_test.csv" --test-csv evidence/labels/test_subset0.csv --labels evidence/labels/labels.csv --tag F01
+```
+
+Lệnh báo đúng hiện trạng 2 seed. Giữ `FORCE_RERUN=False` nếu tiếp tục trên Colab để bỏ qua các lượt đã hoàn thành.

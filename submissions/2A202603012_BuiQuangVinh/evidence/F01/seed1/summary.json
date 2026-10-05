@@ -1,0 +1,22 @@
+{
+  "status": "COMPLETED",
+  "exp_id": "F01",
+  "seed": 1,
+  "best_epoch": 9,
+  "val_macro_f1": 0.9743853984168118,
+  "val_top1": 0.9797200799771494,
+  "val_balanced_acc": 0.9698280036456255,
+  "val_ece": 0.13301786146174835,
+  "val_loss": 0.19896431267261505,
+  "train_seconds": 952.7078652229992,
+  "mean_epoch_seconds": 95.27078652229991,
+  "session_seconds": 1096.4787289160001,
+  "temperature": 1.0,
+  "inference_method": "fp32",
+  "params_m": 27.827049,
+  "gmac": 4.454770176,
+  "pretrained_tag": "in12k_ft_in1k",
+  "split": "official_fold_0",
+  "gmac_method": "Conv2d/Linear and ViT attention MACs; excludes elementwise operations",
+  "inference_img_size": 288
+}

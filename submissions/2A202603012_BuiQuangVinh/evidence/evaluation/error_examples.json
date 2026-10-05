@@ -1,0 +1,20 @@
+[
+  {
+    "Filename": "20170207-154046-0.jpg",
+    "y_true": 0,
+    "y_pred": 7,
+    "confidence": 0.49193537
+  },
+  {
+    "Filename": "20170705-162506-0.jpg",
+    "y_true": 7,
+    "y_pred": 0,
+    "confidence": 0.63579309
+  },
+  {
+    "Filename": "20170707-111904-0.jpg",
+    "y_true": 0,
+    "y_pred": 7,
+    "confidence": 0.74603599
+  }
+]

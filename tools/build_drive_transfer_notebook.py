@@ -24,7 +24,7 @@ markdown("""
     **Trước khi chạy:** dừng notebook training sau khi checkpoint đã lưu. Tài khoản nhận cần đủ dung lượng.
 
     - **Lần 1 — tài khoản cũ:** chọn `SEND`, nhập hai email, tải danh sách JSON, rồi gửi yêu cầu.
-    - **Lần 2 — tài khoản mới:** mở notebook trong phiên Colab mới, chọn `ACCEPT`, tải lên JSON đã lưu, rồi chấp nhận.
+    - **Lần 2 — tài khoản mới:** mở notebook trong phiên Colab mới, chọn `ACCEPT`, tải lên JSON hoặc báo cáo CSV đã lưu, rồi chấp nhận.
     - Chỉ cần CPU. Chạy các cell theo thứ tự. Có thể chạy lại sau khi bị ngắt; file đã xử lý được bỏ qua.
     - Google có thể gửi nhiều email yêu cầu chuyển. Không cần mở từng email khi dùng bước `ACCEPT`.
 
@@ -52,6 +52,8 @@ markdown("""
     Khi đổi tài khoản, dùng phiên Colab mới để tránh giữ thông tin đăng nhập cũ.
 """)
 code('''
+    import csv
+    import io
     import json
     import re
     import time
@@ -214,6 +216,36 @@ code('''
         return by_id
 
 
+    def load_transfer_file(name, payload):
+        # Accept the saved manifest or reconstruct it from a full transfer report.
+        text = payload.decode("utf-8-sig")
+        suffix = Path(name).suffix.lower()
+        if suffix == ".json":
+            manifest = json.loads(text)
+            validate_manifest(manifest)
+            return manifest
+        if suffix == ".csv":
+            records = list(csv.DictReader(io.StringIO(text)))
+        elif suffix == ".jsonl":
+            records = [json.loads(line) for line in text.splitlines() if line.strip()]
+        else:
+            raise ValueError("Chọn một file manifest .json, send_audit .csv hoặc send_log .jsonl.")
+        reported_ids = {record.get("id", "") for record in records}
+        if ROOT_ID not in reported_ids or "" in reported_ids:
+            raise ValueError("Báo cáo thiếu thư mục gốc hoặc ID. Dùng CSV đầy đủ hoặc JSON từ SEND.")
+        print("Đang khôi phục danh sách từ báo cáo và kiểm tra lại trên Drive...")
+        live = scan_folder()
+        current_ids = {item["id"] for item in live["items"]}
+        if not reported_ids.issubset(current_ids):
+            raise ValueError("Có ID trong báo cáo không còn nằm trong thư mục. Chạy SEND để quét lại.")
+        live["items"] = [item for item in live["items"] if item["id"] in reported_ids]
+        validate_manifest(live)
+        print("Đã khôi phục:", len(live["items"]), "file và thư mục.")
+        if current_ids - reported_ids:
+            print("Có file mới ngoài báo cáo; cần chạy SEND bổ sung nếu muốn chuyển các file đó.")
+        return live
+
+
     def check_live_item(item, by_id):
         # Recheck the current owner and parent before each permission change.
         current = metadata(item["id"])
@@ -310,7 +342,13 @@ markdown("""
 
     **SEND:** tự quét và tải về `drive_transfer_manifest.json`. Giữ file này để dùng trên tài khoản mới.
 
-    **ACCEPT:** tải lên đúng file JSON đã nhận ở lần `SEND`.
+    **ACCEPT:** tải lên **một file** trong các file sau:
+
+    - `drive_transfer_manifest.json` — danh sách ban đầu.
+    - `drive_transfer_send_audit.csv` — báo cáo kiểm tra; dùng file này nếu chỉ tải được hai báo cáo cuối.
+    - `drive_transfer_send_log.jsonl` — nhật ký đầy đủ có cả thư mục gốc.
+
+    Tên file có thêm `(1)` vẫn dùng được. Không cần tải lên cả hai báo cáo.
     Danh sách chỉ chứa ID, đường dẫn và thông tin file, không chứa checkpoint hay dữ liệu ảnh.
 """)
 code('''
@@ -322,8 +360,9 @@ code('''
     else:
         uploaded = files.upload()
         if len(uploaded) != 1:
-            raise ValueError("Chỉ tải lên một file drive_transfer_manifest.json.")
-        manifest = json.loads(next(iter(uploaded.values())).decode("utf-8"))
+            raise ValueError("Chỉ tải lên một file JSON, CSV hoặc JSONL.")
+        uploaded_name, uploaded_bytes = next(iter(uploaded.items()))
+        manifest = load_transfer_file(uploaded_name, uploaded_bytes)
 
     by_id = validate_manifest(manifest)
     owned_bytes = sum(
@@ -338,7 +377,8 @@ code('''
         {"Đường dẫn": item["path"], "Chủ sở hữu": owner_email(item), "MiB": round(int(item.get("size", 0)) / 1024**2, 2)}
         for item in manifest["items"]
     ])
-    display(preview)
+    with pd.option_context("display.max_rows", None, "display.max_colwidth", None):
+        display(preview)
     if MODE == "ACCEPT":
         quota = account.get("storageQuota", {})
         if "limit" in quota:
@@ -415,7 +455,7 @@ code('''
     elif MODE == "ACCEPT":
         print("Chưa chuyển đủ. Xem danh sách còn lại; chưa thay đổi vị trí thư mục gốc.")
     else:
-        print("Tiếp theo: mở notebook bằng tài khoản mới, chọn ACCEPT và tải lên JSON.")
+        print("Tiếp theo: mở notebook bằng tài khoản mới, chọn ACCEPT và tải lên JSON hoặc send_audit.csv.")
 ''')
 
 markdown("""
@@ -434,6 +474,7 @@ markdown("""
     - `storageQuotaExceeded`: tài khoản nhận cần thêm dung lượng, rồi chạy lại `ACCEPT`.
     - `NOT_PENDING`: chạy lại `SEND` bằng tài khoản cũ để gửi yêu cầu còn thiếu.
     - Không dùng chung một phiên Colab để đổi tài khoản giữa hai chế độ.
+    - Nếu Colab không lưu được notebook do quyền truy cập, tạo bản sao notebook trong Drive của tài khoản đang chạy.
 
     Tài liệu: [Chuyển quyền sở hữu bằng API](https://developers.google.com/workspace/drive/api/guides/transfer-file),
     [Quyền sở hữu và dung lượng](https://support.google.com/drive/answer/2494892?hl=vi).

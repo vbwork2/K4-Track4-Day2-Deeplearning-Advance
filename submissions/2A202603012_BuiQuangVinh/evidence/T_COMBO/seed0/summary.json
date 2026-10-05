@@ -1,0 +1,22 @@
+{
+  "status": "COMPLETED",
+  "exp_id": "T_COMBO",
+  "seed": 0,
+  "best_epoch": 10,
+  "val_macro_f1": 0.9729189416023547,
+  "val_top1": 0.9791488146243931,
+  "val_balanced_acc": 0.9739939411945756,
+  "val_ece": 0.08385472531251928,
+  "val_loss": 0.15520665049552917,
+  "train_seconds": 895.1698591719996,
+  "mean_epoch_seconds": 89.51698591719996,
+  "session_seconds": 1065.764945502,
+  "temperature": 1.0,
+  "inference_method": "single",
+  "params_m": 27.827049,
+  "gmac": 4.454770176,
+  "pretrained_tag": "in12k_ft_in1k",
+  "split": "official_fold_0",
+  "gmac_method": "Conv2d/Linear and ViT attention MACs; excludes elementwise operations",
+  "inference_img_size": 224
+}
