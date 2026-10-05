@@ -1,0 +1,12 @@
+seed,Filename,direction,confidence
+0,20170207-154046-0.jpg,Chinee Apple -> Snake Weed,0.49193537
+0,20170707-111904-0.jpg,Chinee Apple -> Snake Weed,0.74603599
+0,20170705-162506-0.jpg,Snake Weed -> Chinee Apple,0.63579309
+1,20170705-162907-0.jpg,Chinee Apple -> Snake Weed,0.45713255
+1,20170707-111904-0.jpg,Chinee Apple -> Snake Weed,0.64467925
+1,20170705-162506-0.jpg,Snake Weed -> Chinee Apple,0.51489425
+2,20170705-162907-0.jpg,Chinee Apple -> Snake Weed,0.35823762
+2,20170707-111904-0.jpg,Chinee Apple -> Snake Weed,0.54496223
+2,20170705-161037-0.jpg,Snake Weed -> Chinee Apple,0.49531627
+2,20170705-162401-0.jpg,Snake Weed -> Chinee Apple,0.45803252
+2,20170705-162506-0.jpg,Snake Weed -> Chinee Apple,0.585666

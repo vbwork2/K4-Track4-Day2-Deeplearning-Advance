@@ -2,8 +2,8 @@
   "status": "PASS",
   "uniform_ce": 2.1972246170043945,
   "expected_ce": 2.1972245773362196,
-  "tiny_batch_first_loss": 2.15913724899292,
-  "tiny_batch_last_loss": 0.00024584270431660116,
+  "tiny_batch_first_loss": 2.205204725265503,
+  "tiny_batch_last_loss": 0.00023684764164499938,
   "checks": [
     "output_shape",
     "focal_gamma_zero",

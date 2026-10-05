@@ -1,8 +1,12 @@
 # DeepWeeds Lab Day 2 - 2A202603012 Bui Quang Vinh
 
-**Đã chạy 19 lượt huấn luyện / 190 epoch:** 5 backbone, 10 recipe seed 0, 9 cấu hình inference. Baseline đủ 3 seed; final có seed 0 và 1, còn thiếu seed 2 và benchmark final batch 1/32.
+**Đã chạy xong 20 lượt huấn luyện / 200 epoch:** 5 backbone, 10 recipe seed 0, 9 cấu hình inference. Baseline và final đều đủ 3 seed (0, 1, 2); benchmark final batch 1/32 trên Tesla T4 đã có kết quả.
 
-Kết quả ngày 05/10/2026: macro-F1 test baseline **97,12 ± 0,20%** (3 seed), final tạm thời **98,00 ± 0,01%** (2 seed). Chi tiết trong [report.md](report.md) và [results.xlsx](results.xlsx). Đây là báo cáo tiến độ, chưa phải bài đã hoàn tất mọi yêu cầu.
+Kết quả ngày 05/10/2026: macro-F1 test baseline **97,12 ± 0,20%**, final **97,98 ± 0,03%**; tăng **0,86 điểm phần trăm**. Top-1 final **98,32 ± 0,03%**. Std là std mẫu giữa 3 seed.
+
+p95 final batch 1 **49,85 ms** trên Tesla T4, chưa gồm đọc/resize ảnh; throughput batch 32 **137,85 ảnh/giây**. ECE test final **13,75 ± 0,17%**, nên xác suất vẫn cần hiệu chuẩn nếu triển khai.
+
+Chi tiết trong [report.md](report.md) và [results.xlsx](results.xlsx). Tự chấm mục I: **18/19 điểm ở các ý đã chấm** (tối đa 20); I4a chưa chấm vì final không dùng temperature scaling. Đây là điểm đề xuất từ evaluator, cần giảng viên xác nhận.
 
 ## Chạy Colab
 
@@ -67,16 +71,19 @@ Chạy public tests từ gốc repository:
 python -X utf8 -m unittest discover -s tests -v
 ```
 
-Các test dùng dữ liệu nhỏ và thư mục tạm. Kết quả test code không được dùng làm metric cho bài lab. Bảng kết quả và report hiện lấy từ artifact Colab thật; phần chưa chạy được ghi rõ, không thay bằng 0.
+Các test dùng dữ liệu nhỏ và thư mục tạm. Kết quả test code không được dùng làm metric cho bài lab. Bảng kết quả và report hiện lấy từ artifact Colab thật, đã đối chiếu toàn bộ 26 CSV dự đoán với nhãn fold 0 chính thức.
 
 ## Bằng chứng đã đưa vào bài nộp
 
-- `evidence/<exp_id>/seed<k>/`: config, history, summary của 19 lượt hoàn thành.
+- `evidence/<exp_id>/seed<k>/`: config, history, summary của 20 lượt hoàn thành.
 - `evidence/evaluation/`: chỉ số tính lại bằng `eval.py` nguyên bản, F1 từng lớp và ma trận nhầm lẫn.
 - `evidence/labels/`: CSV fold 0 tham chiếu, giữ nguyên byte và kiểm tra SHA-256.
-- `predictions/`: 19 CSV validation và 5 CSV test đã có.
+- `predictions/`: 20 CSV validation và 6 CSV test, đủ baseline/final 3 seed.
 - `curves/`: biểu đồ training, EDA và ảnh lỗi lấy từ dataset gốc.
 - `evidence/artifact_sources.json`: ID Drive, đường dẫn và SHA-256 để truy ngược artifact.
+- `evidence/latency.json`: benchmark final trên Tesla T4, batch 1/32, 10 warmup và 50 lượt đo.
+- `evidence/colab_eval_out/`: output đánh giá cuối của Colab, tự chấm mục I và danh sách lỗi của cả ba seed.
+- `evidence/colab_report.md`: bản báo cáo tự sinh từ lần chạy Colab hoàn tất.
 
 Trong thư mục bài nộp, có thể tính lại kết quả mà không cần GPU:
 
@@ -84,4 +91,4 @@ Trong thư mục bài nộp, có thể tính lại kết quả mà không cần 
 python -X utf8 code/eval.py score --pred "predictions/F01_seed*_test.csv" --test-csv evidence/labels/test_subset0.csv --labels evidence/labels/labels.csv --tag F01
 ```
 
-Lệnh báo đúng hiện trạng 2 seed. Giữ `FORCE_RERUN=False` nếu tiếp tục trên Colab để bỏ qua các lượt đã hoàn thành.
+Lệnh tính lại đủ 3 seed mà không train hoặc dùng GPU. Giữ `FORCE_RERUN=False` khi mở lại Colab để bỏ qua các lượt đã hoàn thành. Không cần chạy training lại để đọc báo cáo.

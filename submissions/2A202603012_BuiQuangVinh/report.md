@@ -1,16 +1,17 @@
 # DeepWeeds Lab Day 2 - 2A202603012 Bui Quang Vinh
 
-Trạng thái ngày **05/10/2026: báo cáo tiến độ có kết quả thật; chưa hoàn tất final 3 seed**.
+Trạng thái ngày **05/10/2026: đã hoàn thành các lượt chạy Colab; baseline và final đủ 3 seed, có benchmark cuối**.
 Số liệu được đọc từ Drive và tính lại bằng `eval.py` nguyên bản. Bảng đầy đủ: [results.xlsx](results.xlsx).
 
 ## Tóm tắt
 
 - DeepWeeds, fold 0 chính thức, 9 lớp; chọn backbone, recipe và inference chỉ bằng validation.
-- Đã lưu **19 lượt huấn luyện hoàn thành / 190 epoch**, gồm 5 backbone, 10 recipe seed 0, baseline thêm seed 1/2 và final seed 0/1.
+- Đã lưu **20 lượt huấn luyện hoàn thành / 200 epoch**, gồm 5 backbone, 10 recipe seed 0, baseline thêm seed 1/2 và final seed 0/1/2.
 - Đã so sánh **9 cấu hình inference**. Cấu hình khóa: **ConvNeXt-Tiny + label smoothing + CutMix + EMA**, train 224 px, suy luận FP32 288 px (`I07`).
-- Macro-F1 test baseline: **97.12 ± 0.20%** (3 seed); final tạm thời: **98.00 ± 0.01%** (2 seed).
-- Chênh lệch macro-F1 trung bình: **+0.88 điểm phần trăm**; số seed hai nhóm chưa bằng nhau, chưa phải kết quả chung kết đủ điều kiện.
-- Còn thiếu `F01 seed2` và benchmark final batch 1/32 có tên GPU. Không tạo số liệu thay cho phần chưa chạy.
+- Macro-F1 test baseline: **97.12 ± 0.20%** (3 seed); final: **97.98 ± 0.03%** (3 seed).
+- Chênh lệch macro-F1 trung bình: **+0.86 điểm phần trăm** trên cùng bộ seed 0/1/2.
+- Benchmark cuối trên **Tesla T4**, FP32 288 px: p95 batch 1 **49.85 ms**, chưa gồm đọc/resize ảnh.
+- Tự chấm mục I: **18/19 điểm ở các ý đã chấm**; I4a chưa chấm vì final không dùng temperature scaling. Điểm đề xuất cần giảng viên xác nhận.
 
 ## Dữ liệu và thiết lập
 
@@ -35,8 +36,8 @@ Tổng lớp theo split có Chinee Apple 1.126 và Lantana 1.063, lệch một �
 Giữ nguyên CSV và nhãn split chính thức; code chỉ chấp nhận ngoại lệ này khi checksum nguồn khớp.
 
 Recipe nền: pretrained fine-tune, ảnh 224 px, batch 32, 10 epoch, AdamW, LR backbone 1e-4 / head 1e-3, weight decay 0,05, warmup 1 epoch, cosine, train AMP.
-Screening dùng seed 0; baseline/final dự kiến seed 0, 1, 2. Runtime ghi Python 3.13.15, PyTorch 2.11.0+cu130, CUDA 13.0.
-Tên GPU thực tế chưa được lưu trong config/cache hiện có; không coi phần cứng máy cá nhân là GPU đã chạy trên Colab.
+Screening dùng seed 0; baseline/final đã có seed 0, 1, 2. Runtime ghi Python 3.13.15, PyTorch 2.11.0+cu130, CUDA 13.0.
+Benchmark cuối ghi GPU **Tesla T4**. Config của các lượt screening cũ không ghi tên GPU, nên không gán ngược phần cứng này cho mọi phép đo cũ.
 
 ![Phân bố lớp](curves/fold0_class_counts.png)
 
@@ -46,7 +47,7 @@ Tên GPU thực tế chưa được lưu trong config/cache hiện có; không c
 
 Kiểm tra trên Colab đã lưu trạng thái **PASS**: output 9 lớp, xác suất, focal gamma 0 tương đương CE, optimizer không decay norm/bias, frozen BatchNorm, Mixup, CutMix trên cặp không tự ghép, gộp BN và overfit batch nhỏ.
 CE với dự đoán đều: **2.19722462**, gần ln(9) = **2.19722458**.
-Loss batch nhỏ giảm **2.159137 → 0.000246**. Đây là kiểm tra code, không phải kết quả đánh giá mô hình.
+Loss batch nhỏ giảm **2.205205 → 0.000237**. Đây là kiểm tra code, không phải kết quả đánh giá mô hình.
 Bằng chứng: [sanity_checks.json](evidence/sanity_checks.json).
 
 ![Ví dụ augmentation](curves/augmentation_examples.png)
@@ -127,13 +128,25 @@ Không đổi cấu hình khóa sau khi đã xem test. [FINAL_CONFIG_LOCKED.json
 
 ## Độ trễ
 
-Code dùng 10 lượt warmup, 50 lượt đo, đồng bộ CUDA, cùng cách tạo view/forward với prediction; phép đo bỏ đọc ảnh từ đĩa.
-Có p50/p95/p99 sơ bộ cho I00–I08 nhưng artifact chưa ghi tên GPU, và chưa có `final_latency.json` cho batch 1/32.
+Benchmark cuối được lưu tại [latency.json](evidence/latency.json): **Tesla T4**, PyTorch **2.11.0+cu130**, CUDA **13.0**,
+FP32 một view 288 px, không gộp BatchNorm. Dùng **10 lượt warmup, 50 lượt đo**, đồng bộ CUDA, cùng cách tạo view/forward với prediction.
+Không gồm đọc, giải mã và resize ảnh từ đĩa; đầu vào là tensor đã chuẩn bị.
+
+| GPU | Dtype | Batch | Ảnh (px) | p50 (ms/batch) | p95 (ms/batch) | p99 (ms/batch) | Ảnh/giây |
+|---|---|---|---|---|---|---|---|
+| Tesla T4 | FP32 | 1 | 288 | 31.95 | 49.85 | 57.36 | 31.30 |
+| Tesla T4 | FP32 | 32 | 288 | 232.14 | 237.95 | 243.32 | 137.85 |
+
+p95 batch 1 **49.85 ms** thấp hơn ngân sách 100 ms của rubric trong điều kiện đo.
+Batch 32 có p95 tính cho **cả batch**, không phải mỗi ảnh; throughput được tính theo batch/p50, không phải theo p95.
+Số đo này chưa chứng minh độ trễ end-to-end trên robot hoặc tốc độ trên GPU máy cá nhân.
+
+Các p50/p95/p99 của I00–I08 là screening sơ bộ, chưa ghi tên GPU.
 I07 288 px được ghi nhanh hơn I00 224 px; số đo này có thể chịu clock GPU, tải nền hoặc điều kiện phiên khác nhau.
 Vì vậy **không kết luận tăng độ phân giải làm inference nhanh hơn**, không dùng p95 sơ bộ để cam kết SLA trên robot.
 
-Log ghi tổng train + validation **4.52 giờ** cho 19 lượt, chưa gồm setup, tải pretrained, prediction/benchmark và sync Drive.
-38 file `best.pt`/`last.pt` chiếm khoảng **11,37 GiB** trên Drive; checkpoint chứa optimizer và đôi khi EMA, không chỉ trọng số model.
+Log ghi tổng train + validation **4.77 giờ** cho 20 lượt, chưa gồm setup, tải pretrained, prediction/benchmark và sync Drive.
+40 file `best.pt`/`last.pt` chiếm khoảng **12.20 GiB** trên Drive; checkpoint chứa optimizer và đôi khi EMA, không chỉ trọng số model.
 Một lượt F01 đã hoàn thành mất khoảng **15–16 phút** train + validation; đây là số quan sát, không bảo đảm thời gian của phiên khác.
 
 ## Kết quả cuối và phân tích lỗi
@@ -155,34 +168,33 @@ Mốc T00: cùng backbone và lịch train, CE, không CutMix/EMA, inference FP3
 | T00 | 2 | 97.27% | 97.01% | 97.69% | 1.43% |
 | F01 | 0 | 97.52% | 98.01% | 98.32% | 13.80% |
 | F01 | 1 | 97.44% | 97.99% | 98.35% | 13.56% |
-| F01 | 2 | Chưa có | Chưa có | Chưa có | Chưa có |
+| F01 | 2 | 97.70% | 97.94% | 98.29% | 13.89% |
 
-| Chỉ số test | T00 — 3 seed | F01 — 2 seed, tạm thời |
+| Chỉ số test | T00 — 3 seed | F01 — 3 seed |
 |---|---|---|
-| Macro-F1 | 97.12 ± 0.20% | 98.00 ± 0.01% |
-| Top-1 | 97.71 ± 0.12% | 98.33 ± 0.02% |
-| Balanced accuracy | 97.34 ± 0.39% | 97.72 ± 0.04% |
-| ECE | 1.37 ± 0.08% | 13.68 ± 0.17% |
+| Macro-F1 | 97.12 ± 0.20% | 97.98 ± 0.03% |
+| Top-1 | 97.71 ± 0.12% | 98.32 ± 0.03% |
+| Balanced accuracy | 97.34 ± 0.39% | 97.72 ± 0.03% |
+| ECE | 1.37 ± 0.08% | 13.75 ± 0.17% |
 
-Std là std mẫu (ddof = 1). F01 chỉ có **2/3 seed**; không ghi seed 2 bằng 0 hoặc dùng một seed khác thay thế.
-So với trung bình baseline 3 seed, final tăng **0.88 điểm %** macro-F1.
-Khi chỉ đối chiếu hai seed tương ứng 0/1, cải thiện trung bình là **0.82 điểm %**.
-Đây là tín hiệu tốt, nhưng chưa đủ dữ liệu cho kết luận chung kết 3 seed hoặc tự chấm phần I đầy đủ.
+Std là std mẫu (ddof = 1). T00 và F01 đều có **3 seed 0/1/2**, tính metric riêng mỗi seed rồi lấy mean/std.
+Final tăng **0.86 điểm %** macro-F1 so với baseline. Delta lớn hơn std giữa các seed của hai nhóm, nhưng chưa có kiểm định thống kê.
+ECE test final **13.75 ± 0.17%**, cao hơn baseline: F1 tốt hơn nhưng xác suất vẫn chưa được hiệu chuẩn tốt.
 Test chỉ dùng để báo cáo cấu hình đã khóa; công việc tổng hợp này đọc CSV đã có, không chạy lại model trên test.
 
 ### F1 từng lớp
 
-| Lớp | Số ảnh test | F1 T00 — 3 seed | F1 F01 — 2 seed |
+| Lớp | Số ảnh test | F1 T00 — 3 seed | F1 F01 — 3 seed |
 |---|---|---|---|
-| Chinee Apple | 226 | 95.55 ± 0.81% | 96.86 ± 0.02% |
-| Lantana | 213 | 97.22 ± 1.05% | 98.58 ± 0.00% |
-| Parkinsonia | 207 | 98.23 ± 0.28% | 98.33 ± 0.33% |
-| Parthenium | 205 | 98.20 ± 0.76% | 98.89 ± 0.53% |
-| Prickly Acacia | 213 | 95.01 ± 0.41% | 96.98 ± 0.00% |
+| Chinee Apple | 226 | 95.55 ± 0.81% | 96.80 ± 0.11% |
+| Lantana | 213 | 97.22 ± 1.05% | 98.50 ± 0.13% |
+| Parkinsonia | 207 | 98.23 ± 0.28% | 98.64 ± 0.59% |
+| Parthenium | 205 | 98.20 ± 0.76% | 98.93 ± 0.38% |
+| Prickly Acacia | 213 | 95.01 ± 0.41% | 96.77 ± 0.38% |
 | Rubber Vine | 202 | 98.10 ± 0.57% | 98.26 ± 0.01% |
-| Siam Weed | 215 | 97.71 ± 0.98% | 98.83 ± 0.33% |
-| Snake Weed | 204 | 95.64 ± 0.81% | 96.52 ± 0.36% |
-| Negatives | 1822 | 98.43 ± 0.08% | 98.73 ± 0.06% |
+| Siam Weed | 215 | 97.71 ± 0.98% | 98.84 ± 0.24% |
+| Snake Weed | 204 | 95.64 ± 0.81% | 96.35 ± 0.39% |
+| Negatives | 1822 | 98.43 ± 0.08% | 98.72 ± 0.04% |
 
 ### Ma trận nhầm lẫn — F01 seed 0
 
@@ -229,32 +241,54 @@ Quan sát ba ví dụ: `20170207-154046-0.jpg` có ánh sáng tương phản g�
 Giả thuyết là ánh sáng, nền và tỷ lệ đối tượng làm đặc trưng kém ổn định; ba ảnh minh họa chưa đủ để khẳng định nguyên nhân cho toàn bộ tập lỗi.
 Bảng đầy đủ nằm ở [evidence/evaluation](evidence/evaluation); ma trận dùng đúng dự đoán đã lưu.
 
+CSV Colab [cross_class_errors.csv](evidence/colab_eval_out/cross_class_errors.csv) bổ sung lỗi ở cả ba seed:
+seed 0 có 3, seed 1 có 3 và seed 2 có 5 ảnh nhầm giữa Chinee Apple/Snake Weed.
+Đây là số lần nhầm theo seed, một ảnh có thể xuất hiện ở nhiều seed. Ảnh `20170707-111904-0.jpg` bị nhầm ở cả ba seed;
+điều này gợi ý độ khó của mẫu không chỉ do một lần khởi tạo. Minh họa ba ảnh ở trên vẫn dùng seed 0.
+
+### Tự chấm mục I
+
+| Mã | Tiêu chí | Điểm | Tối đa | Chi tiết |
+|---|---|---|---|---|
+| I1 | Top-1 accuracy test | 7 | 7 | 98.32% (mean 3 seed) |
+| I2 | Macro-F1 cải thiện so với mốc | 4 | 5 | final 0.9798, mốc 0.9712, Δ=+0.0086, s=0.0020 |
+| I3 | Recall hai lớp khó | 4 | 4 | Chinee Apple 95.9% (mốc 88.5%), Snake Weed 94.9% (mốc 88.8%) |
+| I4a | ECE sau TS < ECE trước | Chưa chấm | 1 | chưa chấm được (thiếu --uncal) |
+| I4b | Chênh macro-F1 val/test <= 0.02 | 1 | 1 | val 0.9755, test 0.9798, chênh 0.0043 |
+| I5 | Cấu hình thời gian thực | 2 | 2 | p95 = 49.9 ms (ngân sách 100 ms), đo đúng cách |
+
+Tổng các ý đã chấm: **18/19**; mục I tối đa 20. Đây là điểm đề xuất từ `eval.py`, không phải điểm giảng viên.
+I3 đối chiếu recall với mốc bài báo gốc (Chinee Apple 88,5%, Snake Weed 88,8%), khác baseline T00 của thử nghiệm này.
+I4a chưa chấm vì không có cặp test trước/sau TS cho cấu hình final; final đã khóa T = 1 và không dùng TS.
+I08 chỉ chứng minh hiệu chuẩn trên validation của checkpoint T_COMBO. Không dùng kết quả I08 thay cho bằng chứng TS test của final.
+Nguồn tự chấm Colab: [grade_I.json](evidence/colab_eval_out/grade_I.json).
+
 ## Kết luận
 
 Trong các thử nghiệm hiện có, thay backbone từ ResNet-50 sang ConvNeXt-Tiny tạo chênh lệch validation lớn nhất;
 pretraining khác nhau là yếu tố gây nhiễu cần nêu. Recipe tổ hợp tăng khoảng **0,64 điểm %** so với T00 trên seed 0,
 inference 288 px thêm khoảng **0,23 điểm %** trên checkpoint tổ hợp. Các delta là ở từng giai đoạn, không cộng để suy ra test.
 
-Final đã khóa có macro-F1 test tạm thời **98.00 ± 0.01%** và tốt hơn mốc trong hai seed tương ứng.
+Final đã khóa có macro-F1 test **97.98 ± 0.03%** và tốt hơn baseline theo trung bình ba seed.
 Nếu xử lý ảnh ngoại tuyến, I07 là ứng viên theo tiêu chí F1 đã chọn. Với robot cần 30–100 ms/khung,
-cần đo lại end-to-end trên GPU thật; một view 224/256 px hoặc mạng nhẹ là ứng viên để thử theo ngân sách độ trễ,
+cần đo lại end-to-end trên phần cứng triển khai; p95 T4 đã đạt 100 ms trong phép đo model ở batch 1. Một view 224/256 px hoặc mạng nhẹ là ứng viên cho nghiên cứu tiếp theo,
 không phải thay đổi final đã khóa. Nếu dùng xác suất để quyết định, cần hiệu chuẩn phù hợp và đánh giá lệch phân phối.
 
 ## Hạn chế
 
-- **Chưa hoàn tất:** F01 seed 2 và benchmark final batch 1/32 có tên GPU; chưa đủ điều kiện kết luận chung kết theo rubric.
+- Final đủ ba seed và có benchmark batch 1/32; I4a chưa chấm vì cấu hình khóa không dùng TS.
 - Chỉ fold 0, split ngẫu nhiên không theo địa điểm; hiệu quả trên vùng/mùa khác có thể thấp hơn.
-- Screening một seed, final mới hai seed; chưa có kiểm định thống kê cho từng ablation.
+- Screening một seed, final ba seed; chưa có kiểm định thống kê cho từng ablation.
 - Các tag pretrained khác nhau; không tách riêng tác động kiến trúc và dữ liệu pretraining.
 - Ngân sách 10 epoch thấp hơn nghiên cứu gốc; đặc biệt bất lợi cho train từ đầu.
-- Khóa final ưu tiên macro-F1, chưa tối ưu ECE và chưa có benchmark triển khai chuẩn trên phần cứng được ghi rõ.
+- Khóa final ưu tiên macro-F1, chưa tối ưu ECE. Benchmark Tesla T4 không gồm đọc/resize ảnh; chưa đo trên thiết bị triển khai.
 - Thời gian/dung lượng là số từ artifact hiện có, không bao gồm các lượt thất bại hoặc chưa sync nếu có.
 
 ## Tái lập
 
 Mở [notebook training](https://drive.google.com/file/d/1C0bj1mXGq-Bjlmkpze5kO5uGylrssXXd/view), kết nối Drive chứa `K4_Track4_Day2` và chạy từ SECTION 00 với `FORCE_RERUN = False`.
 Các lượt đủ artifact được bỏ qua; việc tổng hợp report không đòi hỏi train lại.
-Nếu cần hoàn thành phần chung kết, chỉ còn training F01 seed 2 và các bước benchmark/report sau đó; không sàng lại cấu hình bằng test.
+Các lượt chung kết, benchmark, đánh giá test và tổng hợp đã hoàn thành. Không cần train lại để xem hoặc tính lại báo cáo; không sàng lại cấu hình bằng test.
 Checkpoint lớn và dataset ở Drive, không đưa lên Git. `eval.py` giữ nguyên.
 
 Tính lại từ bài nộp mà không dùng GPU:

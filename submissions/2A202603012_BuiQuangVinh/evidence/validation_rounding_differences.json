@@ -42,6 +42,12 @@
     "absolute_difference": 4.53363093455561e-08
   },
   {
+    "exp_id": "F01",
+    "seed": 2,
+    "metric": "ece",
+    "absolute_difference": 2.3801355164554394e-08
+  },
+  {
     "exp_id": "T00",
     "seed": 0,
     "metric": "ece",
