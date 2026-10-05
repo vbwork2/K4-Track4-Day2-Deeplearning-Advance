@@ -1,7 +1,5 @@
 # DeepWeeds Lab Day 2 - 2A202603012 Bui Quang Vinh
 
-Trạng thái ngày **05/10/2026: đã hoàn thành các lượt chạy Colab; baseline và final đủ 3 seed, có benchmark cuối**.
-Số liệu được đọc từ Drive và tính lại bằng `eval.py` nguyên bản. Bảng đầy đủ: [results.xlsx](results.xlsx).
 
 ## Tóm tắt
 
